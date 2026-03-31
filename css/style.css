@@ -234,7 +234,7 @@ body {
     }
 
     #portal2 img {
-        object-position: -8px -110px; /* Ajuster spécifiquement pour portal2 */
+        object-position: -8px -120px; /* Ajuster spécifiquement pour portal2 */
         transform: scale(2.4); /* Ajuster le zoom */
     }
 
@@ -266,7 +266,7 @@ body {
     }
 
     #portal2 img {
-        object-position: -8px -110px; /* Ajuster spécifiquement pour portal2 */
+        object-position: -8px -120px; /* Ajuster spécifiquement pour portal2 */
         transform: scale(2.4); /* Ajuster le zoom */
     }
     .floating-image-item {
