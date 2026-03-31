@@ -88,35 +88,28 @@ body {
 /* --- Transition Effect (Le "vortex" ou "remplissage") --- */
 .transition-effect {
     position: absolute;
-    top: var(--click-y, 50%); 
-    left: var(--click-x, 50%); 
-    transform: translate(-50%, -50%) scale(0); 
-    width: 0px;
-    height: 0px;
-    background-color: #00ffff; 
-    border-radius: 50%; 
-    opacity: 0;
-    transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out, width 0.8s ease-in-out, height 0.8s ease-in-out;
+    top: 0; /* Prend toute la hauteur */
+    left: 0; /* Prend toute la largeur */
+    width: 100vw; /* Vue port width */
+    height: 100vh; /* Vue port height */
+    background-color: #000000; /* Couleur de base pour la transition, peut être modifiée par JS */
+    opacity: 0; /* Invisible par défaut */
+    pointer-events: none; /* Ne bloque pas les événements de souris/toucher */
     z-index: 200; 
+    /* Transition d'opacité seulement */
+    transition: opacity 0.5s ease-out; /* Plus court pour un fondu rapide */
 }
+
+/* Quand la transition est active, elle devient visible */
 .transition-effect.active {
-    width: 200vw; 
-    height: 200vh;
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
+    opacity: 1; /* Devient complètement opaque */
+    pointer-events: auto; /* Redevient interactif pendant l'animation */
 }
-.transition-effect.hidden-post-transition {
-    opacity: 0 !important; 
-    pointer-events: none; 
-    transition: opacity 0.1s; 
-    z-index: -1; 
-}
+
+/* Pour le retour, juste inverser */
 .transition-effect.reverse {
-    transition: transform 0.8s ease-in-out 0.5s, opacity 0.8s ease-in-out 0.5s, width 0.8s ease-in-out 0.5s, height 0.8s ease-in-out 0.5s;
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 0;
-    width: 0px;
-    height: 0px;
+    opacity: 0; /* Redevient transparent */
+    transition: opacity 0.5s ease-in; /* Pour le retour, une transition plus douce */
 }
 
 /* --- Experience Screen --- */
@@ -236,12 +229,12 @@ body {
     }
 
     #portal1 img {
-    object-position: 10px -150px; /* Ajuster spécifiquement pour portal2 */
+    object-position: 10px -140px; /* Ajuster spécifiquement pour portal2 */
     transform: scale(1.2); /* Ajuster le zoom */
     }
 
     #portal2 img {
-        object-position: -8px -110px; /* Ajuster spécifiquement pour portal2 */
+        object-position: -8px -160px; /* Ajuster spécifiquement pour portal2 */
         transform: scale(2.4); /* Ajuster le zoom */
     }
 
@@ -266,9 +259,15 @@ body {
         object-position: 0 -70px;
         transform: scale(1.3);
     }
+
+    #portal1 img {
+    object-position: 10px -150px; /* Ajuster spécifiquement pour portal2 */
+    transform: scale(1.2); /* Ajuster le zoom */
+    }
+
     #portal2 img {
-        object-position: -3px -50px;
-        transform: scale(1.8);
+        object-position: -8px -110px; /* Ajuster spécifiquement pour portal2 */
+        transform: scale(2.4); /* Ajuster le zoom */
     }
     .floating-image-item {
         width: 80px; 

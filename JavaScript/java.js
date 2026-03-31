@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const imagesFloatingContainer = document.getElementById('imagesFloatingContainer');
     const musicPlayer = document.getElementById('musicPlayer');
 
-    // --- Tes assets pour chaque portail ---
     const portalAssets = {
         portal1: {
             music: portal1.dataset.music,
@@ -21,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'pics/13.jpg', 'pics/14.jpg', 'pics/15.jpg', 'pics/16.jpg', 'pics/17.png'
             ],
             ambianceClass: 'world1',
-            transitionColor: '#000000' 
+            transitionColor: '#000000' // Couleur de la transition (noir ou autre)
         },
         portal2: {
             music: portal2.dataset.music,
@@ -32,15 +31,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 'pics/31.jpg'
             ],
             ambianceClass: 'world2',
-            transitionColor: '#b41010' 
+            transitionColor: '#b41010' // Couleur de la transition (par exemple, rouge pour le 2ème portail)
         }
     };
 
     let activeFloatingImages = [];
     let currentPortalId = null; 
-    let currentClickedPosition = { x: 0, y: 0 }; 
+    // currentClickedPosition n'est plus nécessaire pour cette transition
+    // let currentClickedPosition = { x: 0, y: 0 }; 
 
-    // --- Audio Context Setup ---
     let audioContext;
     let analyser;
     let dataArray;
@@ -58,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
         analyser.connect(audioContext.destination);
     }
 
-    // --- Canvas Resizing ---
     function resizeCanvas() {
         visualizerCanvas.width = window.innerWidth;
         visualizerCanvas.height = window.innerHeight;
@@ -66,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // --- Start Experience ---
     function startExperience(portalKey, event) {
         if (!audioContext) {
             setupAudio();
@@ -75,24 +72,20 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPortalId = portalKey;
         const experience = portalAssets[portalKey];
 
-        // Gérer les coordonnées du clic/toucher
-        let clientX, clientY;
-        if (event.touches && event.touches.length > 0) { // Pour les événements tactiles
-            clientX = event.touches[0].clientX;
-            clientY = event.touches[0].clientY;
-        } else { // Pour les clics de souris
-            clientX = event.clientX;
-            clientY = event.clientY;
-        }
-
-        currentClickedPosition = { x: clientX, y: clientY };
-        transitionEffect.style.setProperty('--click-x', `${clientX}px`);
-        transitionEffect.style.setProperty('--click-y', `${clientY}px`);
+        // Plus besoin de clientX/Y pour le fondu
+        // currentClickedPosition = { x: event.clientX, y: event.clientY };
+        // transitionEffect.style.setProperty('--click-x', `${event.clientX}px`);
+        // transitionEffect.style.setProperty('--click-y', `${event.clientY}px`);
+        
+        // Applique la couleur de transition
         transitionEffect.style.backgroundColor = experience.transitionColor;
         
         homeScreen.classList.add('hidden'); 
-        transitionEffect.classList.remove('hidden-post-transition'); 
-        transitionEffect.classList.add('active'); 
+        // transitionEffect.classList.remove('hidden-post-transition'); // Pas nécessaire
+        transitionEffect.classList.add('active'); // Rend la transition visible (opaque)
+
+        // Durée de la transition pour que l'écran soit complètement couvert
+        const transitionDuration = 500; // Doit correspondre à la transition CSS
 
         setTimeout(() => {
             experienceScreen.classList.add('active'); 
@@ -104,7 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
             imagesFloatingContainer.classList.add('active'); 
             createFloatingImages(experience.floatingImages);
 
-            transitionEffect.classList.add('hidden-post-transition'); 
+            // transitionEffect.classList.add('hidden-post-transition'); // Pas nécessaire
+            transitionEffect.classList.remove('active'); // Cache la transition après avoir chargé l'expérience
 
             musicPlayer.src = experience.music;
             musicPlayer.load();
@@ -120,16 +114,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log(`Musique de ${portalKey} terminée.`);
                 endExperience();
             };
-
-            // Optionnel : Forcer la fin après X secondes si la musique est en boucle
-            // setTimeout(endExperience, 30000); 
-        }, 800); 
+        }, transitionDuration); // Attendre la fin du fondu pour charger le contenu
     }
 
     portal1.addEventListener('click', (e) => startExperience('portal1', e));
     portal2.addEventListener('click', (e) => startExperience('portal2', e));
 
-    // --- Floating Image Creation ---
     function createFloatingImages(imagesData) {
         activeFloatingImages.forEach(el => el.remove());
         activeFloatingImages = [];
@@ -153,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- End Experience Logic (Dézoom du vortex) ---
     function endExperience() {
         musicPlayer.pause();
         musicPlayer.currentTime = 0; 
@@ -163,20 +152,21 @@ document.addEventListener('DOMContentLoaded', () => {
         experienceScreen.classList.remove(portalAssets[currentPortalId].ambianceClass); 
         experienceScreen.classList.remove('active'); 
 
-        transitionEffect.classList.remove('active');
-        transitionEffect.classList.remove('hidden-post-transition'); 
-        transitionEffect.classList.add('reverse'); 
+        // Rendre la transition active pour couvrir l'écran
+        transitionEffect.style.backgroundColor = portalAssets[currentPortalId].transitionColor; // Utilise la couleur du portail actuel
+        transitionEffect.classList.add('active'); // Devient opaque
+
+        const transitionDuration = 500; // Doit correspondre à la transition CSS
 
         setTimeout(() => {
             homeScreen.classList.remove('hidden');
-            transitionEffect.classList.remove('reverse'); 
+            transitionEffect.classList.remove('active'); // Cache la transition une fois que l'écran d'accueil est visible
             currentPortalId = null;
             backgroundEyeImage.style.backgroundImage = 'none'; 
             console.log("Retour à l'écran d'accueil.");
-        }, 1300); 
+        }, transitionDuration); 
     }
 
-    // --- Main Animation Loop ---
     function animateLoop() {
         requestAnimationFrame(animateLoop);
 
@@ -185,10 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
         analyser.getByteFrequencyData(dataArray);
         let averageVolume = dataArray.reduce((acc, val) => acc + val, 0) / bufferLength;
 
-        // --- Canvas Visualizer (Simple halo pulsant, pas de barre) ---
         ctx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
         
-        // Un halo très subtil au centre, réagissant au volume
         if (currentPortalId) {
             ctx.fillStyle = `rgba(255, 255, 255, ${averageVolume / 500})`; 
             const pulseRadius = averageVolume / 2;
@@ -197,7 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.fill();
         }
 
-        // --- Animation des Images Flottantes ---
         activeFloatingImages.forEach(imgDiv => {
             let currentLeft = parseFloat(imgDiv.style.left);
             let currentTop = parseFloat(imgDiv.style.top);
@@ -221,7 +208,6 @@ document.addEventListener('DOMContentLoaded', () => {
             imgDiv.style.top = `${currentTop}px`;
             imgDiv.style.transform = `rotate(${currentRotation}deg)`;
 
-            // Effets visuels spécifiques aux portails
             if (currentPortalId === 'portal1') {
                 imgDiv.style.filter = `blur(${averageVolume / 100}px)`;
             } else if (currentPortalId === 'portal2') {
