@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const imagesFloatingContainer = document.getElementById('imagesFloatingContainer');
     const musicPlayer = document.getElementById('musicPlayer');
 
+    // --- Tes assets pour chaque portail ---
     const portalAssets = {
         portal1: {
             music: portal1.dataset.music,
@@ -20,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'pics/13.jpg', 'pics/14.jpg', 'pics/15.jpg', 'pics/16.jpg', 'pics/17.png'
             ],
             ambianceClass: 'world1',
-            transitionColor: '#000000' // Couleur de la transition (noir ou autre)
+            transitionColor: '#000000' // Couleur de base pour la transition du portail 1
         },
         portal2: {
             music: portal2.dataset.music,
@@ -31,14 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 'pics/31.jpg'
             ],
             ambianceClass: 'world2',
-            transitionColor: '#050505' // Couleur de la transition (par exemple, rouge pour le 2ème portail)
+            transitionColor: '#b41010' // Couleur de base pour la transition du portail 2
         }
     };
 
     let activeFloatingImages = [];
     let currentPortalId = null; 
-    let animationFrameId = null;
+    let animationFrameId = null; // Pour stocker l'ID de la boucle d'animation
 
+    // --- Audio Context Setup ---
     let audioContext;
     let analyser;
     let dataArray;
@@ -56,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         analyser.connect(audioContext.destination);
     }
 
+    // --- Canvas Resizing ---
     function resizeCanvas() {
         visualizerCanvas.width = window.innerWidth;
         visualizerCanvas.height = window.innerHeight;
@@ -63,60 +66,70 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
+    // --- Start Experience ---
     function startExperience(portalKey, event) {
-    if (!audioContext) {
-        setupAudio();
+        if (!audioContext) {
+            setupAudio();
+        }
+        
+        currentPortalId = portalKey;
+        const experience = portalAssets[portalKey];
+
+        // Arrêter toute boucle d'animation précédente
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null; // Réinitialiser l'ID
+        }
+        
+        // Applique la couleur de transition du portail choisi
+        transitionEffect.style.backgroundColor = experience.transitionColor;
+        
+        homeScreen.classList.add('hidden'); 
+        transitionEffect.classList.add('active'); // Rend la transition visible (opaque)
+
+        // Durée de la transition pour que l'écran soit complètement couvert
+        const transitionDuration = 500; // Doit correspondre à la transition CSS (0.5s)
+
+        setTimeout(() => {
+            experienceScreen.classList.add('active'); 
+            experienceScreen.classList.add(experience.ambianceClass); 
+
+            backgroundEyeImage.style.backgroundImage = `url(${experience.eyeImage})`;
+            backgroundEyeImage.classList.add('active'); 
+
+            imagesFloatingContainer.classList.add('active'); 
+            createFloatingImages(experience.floatingImages);
+
+            transitionEffect.classList.remove('active'); // Cache la transition après avoir chargé l'expérience
+
+            musicPlayer.src = experience.music;
+            musicPlayer.load();
+            musicPlayer.play().then(() => {
+                audioContext.resume();
+                animateLoop(); // Démarre la nouvelle boucle d'animation
+                console.log(`Expérience ${portalKey} démarrée !`);
+            }).catch(error => {
+                console.error(`Erreur de lecture audio pour ${portalKey}:`, error);
+                // Si la lecture échoue (ex: autoplay bloqué), on peut aussi forcer endExperience
+                endExperience(); 
+            });
+
+            musicPlayer.onended = () => {
+                console.log(`Musique de ${portalKey} terminée.`);
+                endExperience();
+            };
+
+            // Optionnel : Forcer la fin après X secondes si la musique est en boucle ou n'a pas d'événement 'onended' fiable
+            // setTimeout(endExperience, 30000); 
+        }, transitionDuration); // Attendre la fin du fondu pour charger le contenu
     }
-    
-    currentPortalId = portalKey;
-    const experience = portalAssets[portalKey];
-
-    // Arrêter toute boucle d'animation précédente
-    if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-    }
-    
-    transitionEffect.style.backgroundColor = experience.transitionColor;
-    
-    homeScreen.classList.add('hidden'); 
-    transitionEffect.classList.add('active'); 
-
-    const transitionDuration = 500; 
-
-    setTimeout(() => {
-        experienceScreen.classList.add('active'); 
-        experienceScreen.classList.add(experience.ambianceClass); 
-
-        backgroundEyeImage.style.backgroundImage = `url(${experience.eyeImage})`;
-        backgroundEyeImage.classList.add('active'); 
-
-        imagesFloatingContainer.classList.add('active'); 
-        createFloatingImages(experience.floatingImages);
-
-        transitionEffect.classList.remove('active'); 
-
-        musicPlayer.src = experience.music;
-        musicPlayer.load();
-        musicPlayer.play().then(() => {
-            audioContext.resume();
-            // Démarre la nouvelle boucle d'animation et stocke son ID
-            animateLoop(); // On verra comment stocker l'ID dans animateLoop
-            console.log(`Expérience ${portalKey} démarrée !`);
-        }).catch(error => {
-            console.error(`Erreur de lecture audio pour ${portalKey}:`, error);
-        });
-
-        musicPlayer.onended = () => {
-            console.log(`Musique de ${portalKey} terminée.`);
-            endExperience();
-        };
-    }, transitionDuration); 
-}
 
     portal1.addEventListener('click', (e) => startExperience('portal1', e));
     portal2.addEventListener('click', (e) => startExperience('portal2', e));
 
+    // --- Floating Image Creation ---
     function createFloatingImages(imagesData) {
+        // Supprime les anciennes images flottantes
         activeFloatingImages.forEach(el => el.remove());
         activeFloatingImages = [];
         imagesFloatingContainer.innerHTML = ''; 
@@ -126,9 +139,11 @@ document.addEventListener('DOMContentLoaded', () => {
             imgDiv.className = 'floating-image-item';
             imgDiv.style.backgroundImage = `url(${src})`;
 
+            // Positionnement initial aléatoire
             imgDiv.style.left = `${Math.random() * (window.innerWidth - 150)}px`;
             imgDiv.style.top = `${Math.random() * (window.innerHeight - 150)}px`;
             
+            // Vitesses et rotation aléatoires
             imgDiv.dataset.speedX = (Math.random() - 0.5) * 3; 
             imgDiv.dataset.speedY = (Math.random() - 0.5) * 3;
             imgDiv.dataset.rotation = Math.random() * 360;
@@ -139,39 +154,66 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- End Experience Logic (Fondu au retour) ---
     function endExperience() {
         musicPlayer.pause();
         musicPlayer.currentTime = 0; 
 
+        // Arrêter la boucle d'animation
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null; // Réinitialiser l'ID
+        }
+
         imagesFloatingContainer.classList.remove('active'); 
         backgroundEyeImage.classList.remove('active'); 
-        experienceScreen.classList.remove(portalAssets[currentPortalId].ambianceClass); 
+        
+        // Supprime la classe d'ambiance spécifique du monde avant de potentiellement en ajouter une nouvelle
+        if (currentPortalId) {
+            experienceScreen.classList.remove(portalAssets[currentPortalId].ambianceClass); 
+        }
         experienceScreen.classList.remove('active'); 
 
-        // Rendre la transition active pour couvrir l'écran
-        transitionEffect.style.backgroundColor = portalAssets[currentPortalId].transitionColor; // Utilise la couleur du portail actuel
+        // Rendre la transition active pour couvrir l'écran avant de revenir à l'accueil
+        // Utilise la couleur du portail actuel pour la transition de retour
+        if (currentPortalId) { // S'assurer qu'un portail était actif
+            transitionEffect.style.backgroundColor = portalAssets[currentPortalId].transitionColor; 
+        } else {
+            transitionEffect.style.backgroundColor = '#000000'; // Fallback au noir
+        }
         transitionEffect.classList.add('active'); // Devient opaque
 
-        const transitionDuration = 500; 
+        const transitionDuration = 500; // Doit correspondre à la transition CSS (0.5s)
 
         setTimeout(() => {
             homeScreen.classList.remove('hidden');
-            transitionEffect.classList.remove('active'); 
-            currentPortalId = null;
-            backgroundEyeImage.style.backgroundImage = 'none'; 
+            transitionEffect.classList.remove('active'); // Cache la transition une fois que l'écran d'accueil est visible
+            currentPortalId = null; // Réinitialiser le portail actif
+            backgroundEyeImage.style.backgroundImage = 'none'; // Effacer l'image de fond
             console.log("Retour à l'écran d'accueil.");
         }, transitionDuration); 
-        
     }
 
+    // --- Main Animation Loop ---
     function animateLoop() {
+        // Stocke l'ID de cette requête pour pouvoir l'annuler plus tard
         animationFrameId = requestAnimationFrame(animateLoop); 
 
-        if (!audioContext || audioContext.state === 'suspended' || !currentPortalId) return;
+        // Si l'audio n'est pas prêt ou qu'aucun portail n'est actif, arrêter la boucle ici.
+        // Cela devrait être géré par `cancelAnimationFrame` mais une sécurité ne fait pas de mal.
+        if (!audioContext || audioContext.state === 'suspended' || !currentPortalId) {
+            // Si l'animation ne devrait plus tourner, annuler la prochaine frame
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            return; 
+        }
 
         analyser.getByteFrequencyData(dataArray);
         let averageVolume = dataArray.reduce((acc, val) => acc + val, 0) / bufferLength;
 
+        // --- Canvas Visualizer (Simple halo pulsant) ---
         ctx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
         
         if (currentPortalId) {
@@ -182,33 +224,41 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.fill();
         }
 
+        // --- Animation des Images Flottantes ---
         activeFloatingImages.forEach(imgDiv => {
             let currentLeft = parseFloat(imgDiv.style.left);
             let currentTop = parseFloat(imgDiv.style.top);
             let currentRotation = parseFloat(imgDiv.dataset.rotation);
 
+            // La vitesse est influencée par le volume audio
             let speedMultiplier = 1 + (averageVolume / 100); 
-            if (currentPortalId === 'portal2') speedMultiplier *= 1.5; 
+            if (currentPortalId === 'portal2') speedMultiplier *= 1.5; // Vitesse accrue pour le portail 2
 
             currentLeft += parseFloat(imgDiv.dataset.speedX) * speedMultiplier;
             currentTop += parseFloat(imgDiv.dataset.speedY) * speedMultiplier;
             currentRotation += parseFloat(imgDiv.dataset.rotationSpeed) * speedMultiplier;
 
+            // Détection des bords de l'écran pour rebondir
             if (currentLeft + imgDiv.offsetWidth > window.innerWidth || currentLeft < 0) {
                 imgDiv.dataset.speedX *= -1;
+                // Ajustement pour éviter de rester bloqué sur le bord
+                currentLeft = Math.max(0, Math.min(currentLeft, window.innerWidth - imgDiv.offsetWidth)); 
             }
             if (currentTop + imgDiv.offsetHeight > window.innerHeight || currentTop < 0) {
                 imgDiv.dataset.speedY *= -1;
+                // Ajustement pour éviter de rester bloqué sur le bord
+                currentTop = Math.max(0, Math.min(currentTop, window.innerHeight - imgDiv.offsetHeight));
             }
 
             imgDiv.style.left = `${currentLeft}px`;
             imgDiv.style.top = `${currentTop}px`;
             imgDiv.style.transform = `rotate(${currentRotation}deg)`;
 
+            // Effets visuels spécifiques aux portails
             if (currentPortalId === 'portal1') {
-                imgDiv.style.filter = `blur(${averageVolume / 100}px)`;
+                imgDiv.style.filter = `blur(${averageVolume / 100}px)`; // Flou selon le volume
             } else if (currentPortalId === 'portal2') {
-                imgDiv.style.filter = `hue-rotate(${averageVolume * 1.5}deg)`;
+                imgDiv.style.filter = `hue-rotate(${averageVolume * 1.5}deg)`; // Changement de teinte selon le volume
             }
         });
     }
