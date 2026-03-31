@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'pics/31.jpg'
             ],
             ambianceClass: 'world2',
-            transitionColor: '#b41010' // Couleur de la transition (par exemple, rouge pour le 2ème portail)
+            transitionColor: '#050505' // Couleur de la transition (par exemple, rouge pour le 2ème portail)
         }
     };
 
