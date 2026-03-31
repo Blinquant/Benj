@@ -75,9 +75,19 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPortalId = portalKey;
         const experience = portalAssets[portalKey];
 
-        currentClickedPosition = { x: event.clientX, y: event.clientY };
-        transitionEffect.style.setProperty('--click-x', `${event.clientX}px`);
-        transitionEffect.style.setProperty('--click-y', `${event.clientY}px`);
+        // Gérer les coordonnées du clic/toucher
+        let clientX, clientY;
+        if (event.touches && event.touches.length > 0) { // Pour les événements tactiles
+            clientX = event.touches[0].clientX;
+            clientY = event.touches[0].clientY;
+        } else { // Pour les clics de souris
+            clientX = event.clientX;
+            clientY = event.clientY;
+        }
+
+        currentClickedPosition = { x: clientX, y: clientY };
+        transitionEffect.style.setProperty('--click-x', `${clientX}px`);
+        transitionEffect.style.setProperty('--click-y', `${clientY}px`);
         transitionEffect.style.backgroundColor = experience.transitionColor;
         
         homeScreen.classList.add('hidden'); 
